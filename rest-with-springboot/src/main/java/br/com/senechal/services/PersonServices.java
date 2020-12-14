@@ -1,63 +1,57 @@
 package br.com.senechal.services;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.com.senechal.exception.ResourceNotFound;
 import br.com.senechal.model.Person;
+import br.com.senechal.repository.PersonRepository;
 
 @Service
 public class PersonServices {
 	
-	private final AtomicLong counter = new AtomicLong();
+	@Autowired
+	PersonRepository repository;
 	
 	public Person create(Person person) {
-		return person;		
+		return repository.save(person);		
 	}
 	
 	public Person update(Person person) {
-		return person;		
+		
+		Person entity = repository.findById(person.getId())
+				.orElseThrow(() -> new ResourceNotFound("No record found for this ID"));
+		
+		entity.setFirstName(person.getFirstName());
+		entity.setLastName(person.getFirstName());
+		entity.setAddress(person.getAddress());
+		entity.setGender(person.getGender());	
+		
+		return repository.save(person);
 	}
 	
-	public void delete(String id) {
+	public void delete(Long id) {
+		
+		Person entity = repository.findById(id)
+				.orElseThrow(() -> new ResourceNotFound("No record found for this ID"));
+		
+		repository.delete(entity);
 
 	}	
 	
-	public Person findById(String id) {
-		Person person = new Person();
-		
-		person.setId(counter.incrementAndGet());
-		person.setFirstName("Thiago");
-		person.setLastName("Senechal");
-		person.setAddress("Brasil");
-		person.setGender("Male");
-		
-		return person;
-		
-	} 
-	
 	public List<Person> findAll() {
-		List<Person> persons = new ArrayList<Person>();
-		for (int i =0; i < 8; i++) {
-			Person person = mockPerson(i);
-			persons.add(person);
-		}
-		return persons;
-		
-	}
 
-	private Person mockPerson(int i) {
-		Person person = new Person();
+		return repository.findAll();
 		
-		person.setId(counter.incrementAndGet());
-		person.setFirstName("Person name" + i);
-		person.setLastName("Last name"+ i);
-		person.setAddress("Some address in Brazil"+ i);
-		person.setGender("Male");
-		
-		return person;
 	}
+	
+	public Person findById(Long id) {
+		
+		return repository.findById(id)
+				.orElseThrow(() -> new ResourceNotFound("No record found for this ID"));
+		
+	} 	
 
 }
