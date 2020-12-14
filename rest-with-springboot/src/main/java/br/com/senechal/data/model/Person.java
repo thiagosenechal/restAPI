@@ -1,4 +1,4 @@
-package br.com.senechal.model;
+package br.com.senechal.data.model;
 
 import java.io.Serializable;
 
