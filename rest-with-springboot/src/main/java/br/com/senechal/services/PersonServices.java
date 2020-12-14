@@ -3,10 +3,12 @@ package br.com.senechal.services;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
-import br.com.senechal.exception.ResourceNotFound;
-import br.com.senechal.model.Person;
+import br.com.senechal.converter.DozerConverter;
+import br.com.senechal.data.model.Person;
+import br.com.senechal.data.vo.PersonVO;
 import br.com.senechal.repository.PersonRepository;
 
 @Service
@@ -14,44 +16,41 @@ public class PersonServices {
 	
 	@Autowired
 	PersonRepository repository;
-	
-	public Person create(Person person) {
-		return repository.save(person);		
+		
+	public PersonVO create(PersonVO person) {
+		var entity = DozerConverter.parseObject(person, Person.class);
+		var vo = DozerConverter.parseObject(repository.save(entity), PersonVO.class);
+		return vo;
 	}
 	
-	public Person update(Person person) {
-		
-		Person entity = repository.findById(person.getId())
-				.orElseThrow(() -> new ResourceNotFound("No record found for this ID"));
-		
-		entity.setFirstName(person.getFirstName());
-		entity.setLastName(person.getFirstName());
-		entity.setAddress(person.getAddress());
-		entity.setGender(person.getGender());	
-		
-		return repository.save(person);
-	}
-	
-	public void delete(Long id) {
-		
-		Person entity = repository.findById(id)
-				.orElseThrow(() -> new ResourceNotFound("No record found for this ID"));
-		
-		repository.delete(entity);
-
+	public List<PersonVO> findAll() {
+		return DozerConverter.parseListObjects(repository.findAll(), PersonVO.class);
 	}	
 	
-	public List<Person> findAll() {
+	public PersonVO findById(Long id) {
 
-		return repository.findAll();
-		
+		var entity = repository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("No records found for this ID"));
+		return DozerConverter.parseObject(entity, PersonVO.class);
 	}
+		
+	public PersonVO update(PersonVO person) {
+		var entity = repository.findById(person.getId())
+				.orElseThrow(() -> new ResourceNotFoundException("No records found for this ID"));
+		
+		entity.setFirstName(person.getFirstName());
+		entity.setLastName(person.getLastName());
+		entity.setAddress(person.getAddress());
+		entity.setGender(person.getGender());
+		
+		var vo = DozerConverter.parseObject(repository.save(entity), PersonVO.class);
+		return vo;
+	}	
 	
-	public Person findById(Long id) {
-		
-		return repository.findById(id)
-				.orElseThrow(() -> new ResourceNotFound("No record found for this ID"));
-		
-	} 	
+	public void delete(Long id) {
+		Person entity = repository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("No records found for this ID"));
+		repository.delete(entity);
+	}
 
 }
